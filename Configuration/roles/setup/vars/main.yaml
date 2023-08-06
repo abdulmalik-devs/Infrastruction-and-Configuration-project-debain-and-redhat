@@ -1,0 +1,17 @@
+---
+debian_packages:
+  - python3
+  - git
+  - curl
+  - wget
+  - python3-pip
+  - apache2
+  - libapache2-mod-wsgi-py3
+  
+redhat_packages:
+  - git
+  - curl
+  - wget
+  - nodejs
+  - npm
+  - nginx

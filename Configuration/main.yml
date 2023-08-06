@@ -1,0 +1,36 @@
+---
+- name: Install Necessary Dependencies
+  hosts: webserves
+  gather_facts: False
+  become: true
+  roles:
+    - setup
+
+- name: Setup Apache and Django application 
+  hosts: webservers
+  gather_facts: False
+  become: true
+  roles:
+    - deploy
+
+# Ensure server is is open
+- name: Wait for server port 5000 to become open on the host
+  wait_for:
+    port: "{{ server_port }}"
+    delay: 10
+
+
+# Error Handling for failed task
+- name: Attempt and gracefully handle failure
+  command: /bin/false
+  register: result
+  ignore_errors: yes
+
+- name: Report failure
+  fail:
+    msg: "The command failed"
+  when: result is failed
+
+# - name: Ansible's Vault for sensitive data 
+#   vars_files:
+#     - secrets.yml

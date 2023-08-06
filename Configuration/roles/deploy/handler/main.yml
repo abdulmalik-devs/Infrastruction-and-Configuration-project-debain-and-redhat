@@ -1,0 +1,42 @@
+---
+- name: restart nginx
+  service: 
+    name: nginx
+    state: restarted 
+  enabled: yes
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: handler
+  
+- name: restart apache2
+  service: 
+    name: apache2
+    state: restarted
+    enabled: yes
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tag: handler
+
+- name: restart uwsgi
+  service:
+    name: uwsgi
+    state: restarted
+    enabled: yes
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tag: handler
+
+- name: save pm2
+  service:
+    name: pm2 save
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tag: handler
+
+- name: enable pm2
+service:
+  name: pm2 startup
+  enabled: yes
+become: true
+when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+tag: handler

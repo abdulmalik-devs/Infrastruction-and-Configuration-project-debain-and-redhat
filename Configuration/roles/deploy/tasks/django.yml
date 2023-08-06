@@ -1,0 +1,66 @@
+---
+# Clone the Django Application from your repo
+- name: Clone Django app
+  git:
+    repo: "https://github.com/abdulmalik-devs/ansible-web-app-deployment.git"
+    dest: "/home/ubuntu/myenv/django-env/{{ django_application }}"
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Install the Django requirement packages
+- name: Install Django app dependencies
+  pip:
+    requirements: "/home/ubuntu/myenv/django-env/{{ django_application }}/requirements.txt"
+    virtualenv: "/home/ubuntu/myenv/django-env"
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Copy the Django application to the Apache directory
+- name: Deploy Django application
+  copy:
+    src: "/home/ubuntu/myenv/django-env/{{ django_application }}"
+    dest: "/var/www/html/{{ django_application }}"
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: deploy
+
+# Configure your apache config file to host your Django app
+- name: Configure Apache2 to host Django application
+  template:
+    src: "./ansible/roles/deploy/templates/apache2.conf.j2"
+    dest: "/etc/apache2/sites-available/000-default.conf"
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: deploy
+
+# Enable wsgi module for your Django app
+- name: Enable wsgi module (Debian)
+  apache2_module:
+    name: wsgi
+    state: present
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+
+# Enable the Apache virtual host config
+- name: Enable Apache site (Debian)
+  apache2_site:
+    name: 000-default
+    state: present
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Restart the Apache config to apply the new configuration
+- name: Restart Apache to apply new configuration
+  service:
+    name: apache2
+    state: restarted
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: deploy
+
+# Restart uwsgi to apply the new configuration
+- name: Restart uwsgi to apply new configuration
+  service:
+    name: uwsgi
+    state: restarted
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: deploy

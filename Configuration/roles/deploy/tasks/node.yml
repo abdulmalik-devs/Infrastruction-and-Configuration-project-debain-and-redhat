@@ -1,0 +1,74 @@
+---
+# Clone the Node.js Application from your repo
+- name: Clone application repository
+  git:
+    repo: "https://github.com/abdulmalik-devs/ansible-web-app-deployment.git"
+    dest: "/home/ubuntu/mynodejs_app"
+    version: "{{ application_version }}"
+
+# Install the server dependencies
+- name: Install Node.js dependencies for server
+  npm:
+    path: "/home/ubuntu/mynodejs_app/{{ node_application }}/server"
+
+# Start server with pm2
+- name: Start application with PM2
+  command: pm2 start index.js --name backend
+  args:
+    chdir: "/home/ubuntu/mynodejs_app/{{ node_application }}/server"
+
+# Save PM2 Process List
+- name: Save PM2 process list
+  notify: save pm2
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: deploy
+
+# Enable PM2 at startup
+- name: Enable PM2 at startup
+  notify: enable pm2
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: deploy
+
+# Install the client dependencies
+- name: Install Node.js dependencies for client
+  npm:
+    path: "/home/ubuntu/mynodejs_app/{{ node_application }}/client"
+
+# Build the client application
+- name: Build client application
+  command: npm run build
+  args:
+    chdir: "/home/ubuntu/mynodejs_app/{{ node_application }}/client"
+
+# Copy client application files
+- name: Copy client application files
+  copy:
+    src: "/home/ubuntu/mynodejs_app/{{ node_application }}/client/build"
+    dest: "/var/www"
+
+# Configure NGINX to host Node.js application
+- name: Configure NGINX to host Node.js application
+  template:
+    src: "/ansible/roles/deploy/templates/nginx.conf.j2"
+    dest: "/etc/nginx/sites-available/default"
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: deploy
+
+# Enable Nginx site
+- name: Enable Nginx site
+  file:
+    src: "/etc/nginx/sites-available/default"
+    dest: "/etc/nginx/sites-enabled/default"
+    state: link
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: deploy
+
+# Restart Nginx to apply new configuration
+- name: Restart Nginx to apply new configuration
+  service:
+    name: nginx
+    state: restarted
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: deploy

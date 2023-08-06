@@ -1,0 +1,46 @@
+---
+- name: Enable firewall on Debian-based systems
+  ufw:
+    state: enabled
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+- name: Open port 8000 on Debian-based systems
+  ufw:
+    rule: allow
+    port: 8000
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+- name: Enable firewall on Red Hat-based systems
+  firewalld:
+    zone: public
+    service: http
+    permanent: true
+    state: enabled
+  when: "'django' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+- name: Open port 8080 on Red Hat-based systems
+  firewalld:
+    port: 8080/tcp
+    permanent: yes
+    state: enabled
+  when: "'django' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+- name: Open port 3000 on Red Hat-based systems
+  firewalld:
+    port: 3000/tcp
+    permanent: yes
+    state: enabled
+  when: "'django' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+- name: Open port 5000 on Red Hat-based systems
+  firewalld:
+    port: 5000/tcp
+    permanent: yes
+    state: enabled
+  when: "'django' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup

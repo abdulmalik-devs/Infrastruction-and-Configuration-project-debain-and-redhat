@@ -1,0 +1,93 @@
+---
+# Updating Debain_OS
+- name: Update apt cache (Debian)
+  apt:
+    update_cache: yes
+  become: true
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Updating Redhat_OS
+- name: Update yum cache (RedHat)
+  yum:
+    name: '*'
+    state: latest
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Install the epel-release
+- name: Install EPEL-release (RedHat)
+  yum:
+    name: epel-release
+    state: present
+  become: true
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Install Virtual environment for django_app
+- name: Install Virtual Environment
+  become: true
+  pip:
+    name: "{{ env_name }}"
+    virtualenv: /home/ubuntu/myenv/django-env
+    state: present
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Create a virtual environment directory
+- name: Create a directory for the virtual environment
+  file:
+    path: /home/ubuntu/myenv
+    state: directory
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Create a virtual environment for django app
+- name: Create a virtual environment
+  command: virtualenv /home/ubuntu/myenv/django-env
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Installing necessary dependencies for Debain_OS
+- name: Install necessary packages for Django (Debian)
+  apt:
+    name: "{{ item }}"
+    state: latest
+    virtualenv: /home/ubuntu/myenv/django-env
+  become: true
+  loop: "{{ debian_packages }}"
+  when: "'django' in inventory_hostname and ansible_os_family == 'Debian'"
+  tags: setup
+
+# Install Virtual environment for nodejs_app
+- name: Create a directory for the virtual environment
+  file:
+    path: /home/ubuntu/mynodejs_app
+    state: directory
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Installing necessary dependencies for Redhat_OS
+- name: Install PM2
+  shell: npm install pm2 -g
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Installing necessary dependencies for Redhat_OS
+- name: Install necessary packages for NodeJS (RedHat)
+  yum:
+    name: "{{ item }}"
+    state: latest
+  become: true
+  loop: "{{ redhat_packages }}"
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Install pm2
+- name: Install PM2
+  shell: npm install pm2 -g
+  when: "'nodejs' in inventory_hostname and ansible_os_family == 'RedHat'"
+  tags: setup
+
+# Add specific configuration tasks for Node.js + nginx here (like enabling specific node version or additional system settings)
